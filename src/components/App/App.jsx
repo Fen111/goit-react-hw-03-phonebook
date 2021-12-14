@@ -16,9 +16,9 @@ export default class App extends Component {
   formSubmitHandler = data => {
     const { contacts } = this.state;
     const newContact = {
+      id: nanoid(),
       name: data.name,
       number: data.number,
-      id: nanoid(),
     };
 
     if (contacts.some(({ name }) => name === newContact.name)) {
@@ -51,6 +51,23 @@ export default class App extends Component {
       contact.name.toLowerCase().includes(lowerCaseFilter),
     );
   };
+
+  componentDidMount() {
+    const contacts = localStorage.getItem('contacts');
+    const parsedContacts = JSON.parse(contacts);
+
+    if (parsedContacts) {
+      this.setState({ contacts: parsedContacts });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { contacts } = this.state;
+
+    if (contacts !== prevState.contacts) {
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+    }
+  }
 
   render() {
     const { filter } = this.state;
