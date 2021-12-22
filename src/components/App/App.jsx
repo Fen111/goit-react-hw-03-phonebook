@@ -1,33 +1,56 @@
-import { nanoid } from 'nanoid';
 import React, { Component } from 'react';
+import { nanoid } from 'nanoid';
 
+import initialState from '../../data/contacts.json';
 import Container from '../Container/Container';
 import ContactForm from 'components/ContactForm';
 import Filter from 'components/Filter';
 import ContactList from 'components/ContactList';
-import contactsUser from '../../data/contacts.json';
 
 export default class App extends Component {
   state = {
-    contacts: contactsUser,
+    contacts: initialState,
     filter: '',
   };
 
+  #localStorageKey = 'contacts';
+
+  componentDidMount() {
+    const localStorageContacts = localStorage.getItem(this.#localStorageKey);
+    const contacts = JSON.parse(localStorageContacts);
+
+    if (contacts) {
+      this.setState({ contacts });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { contacts } = this.state;
+
+    if (contacts !== prevState.contacts) {
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+    }
+  }
+
   formSubmitHandler = data => {
     const { contacts } = this.state;
-    const newContact = {
-      id: nanoid(),
-      name: data.name,
-      number: data.number,
-    };
 
-    if (contacts.some(({ name }) => name === newContact.name)) {
-      alert(`${newContact.name} is already in contacts!`);
+    if (contacts.some(({ name }) => name === data.name)) {
+      alert(`${data.name} is already in contacts!`);
       return;
-    } else if (contacts.some(({ number }) => number === newContact.number)) {
-      alert(`${newContact.number} is already in contacts!`);
+    } else if (contacts.some(({ number }) => number === data.number)) {
+      alert(`${data.number} is already in contacts!`);
       return;
     }
+
+    const { name, number } = data;
+
+    const newContact = {
+      id: nanoid(),
+      name,
+      number,
+    };
+
     this.setState(({ contacts }) => ({
       contacts: [newContact, ...contacts],
     }));
@@ -51,23 +74,6 @@ export default class App extends Component {
       contact.name.toLowerCase().includes(lowerCaseFilter),
     );
   };
-
-  componentDidMount() {
-    const contacts = localStorage.getItem('contacts');
-    const parsedContacts = JSON.parse(contacts);
-
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    }
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    const { contacts } = this.state;
-
-    if (contacts !== prevState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(contacts));
-    }
-  }
 
   render() {
     const { filter } = this.state;
